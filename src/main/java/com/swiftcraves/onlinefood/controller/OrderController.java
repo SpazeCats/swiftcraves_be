@@ -1,0 +1,50 @@
+package com.swiftcraves.onlinefood.controller;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.swiftcraves.onlinefood.model.Order;
+import com.swiftcraves.onlinefood.model.User;
+import com.swiftcraves.onlinefood.request.OrderRequest;
+import com.swiftcraves.onlinefood.response.PaymentResponse;
+import com.swiftcraves.onlinefood.service.OrderService;
+import com.swiftcraves.onlinefood.service.PaymentService;
+import com.swiftcraves.onlinefood.service.UserService;
+
+
+@RestController
+@RequestMapping("/api")
+public class OrderController {
+
+    @Autowired
+    private OrderService orderService;
+    @Autowired
+    private PaymentService paymentService;
+    @Autowired
+    private UserService userService;
+
+     @PostMapping("/order")
+        public ResponseEntity<PaymentResponse> createOrder(@RequestBody OrderRequest req, @RequestHeader("Authorization") String jwt) throws Exception {
+            User user=userService.findUserByJwtToken(jwt);
+            Order order = orderService.createOrder(req, user);
+            PaymentResponse res=paymentService.createPaymentLink(order);
+            return new ResponseEntity<>(res, HttpStatus.OK);
+        }
+
+        @GetMapping("/order/user")
+        public ResponseEntity<List<Order>> getOrderHistory(@RequestHeader("Authorization") String jwt) throws Exception {
+            User user=userService.findUserByJwtToken(jwt);
+            List<Order> order = orderService.getUsersOrder(user.getId());
+            return new ResponseEntity<>(order, HttpStatus.OK);
+        }
+        
+}
